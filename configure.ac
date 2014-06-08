@@ -15,6 +15,8 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+AC_CHECK_HEADERS([stdlib.h])
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT
