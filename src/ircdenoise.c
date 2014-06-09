@@ -353,16 +353,36 @@ init(int *argc, char ***argv, struct settings_s *sett)
 static void
 usage(FILE *str, const char *a0, int ec)
 {
-	#define I(STR) fputs(STR "\n", str)
-	I("==============================");
-	I("== ircdenoise - ha ha ha disregard that, i suck cocks ==");
-	I("==============================");
-	fprintf(str, "usage: %s [-h]\n", a0);
-	I("");
-	I("\t-h: Display brief usage statement and terminate");
-	I("");
-	I("(C) 2014, Timo Buhrmester (contact: #fstd on irc.freenode.org)");
-	#undef I
+	#define XSTR(s) STR(s)
+	#define STR(s) #s
+	#define U(STR) fputs(STR "\n", str)
+	U("======================");
+	U("== ircdenoise "PACKAGE_VERSION" ==");
+	U("======================");
+	fprintf(str, "usage: %s [-vhqriT] <hostspec>", a0);
+	U("");
+	U("\t<hostspec> specifies the IRC server to connect against");
+	U("\t\thostspec := srvaddr[:port]");
+	U("\t\tsrvaddr  := ip4addr|ip6addr|dnsname");
+	U("\t\tport     := int(0..65535)");
+	U("\t\tip4addr  := 'aaa.bbb.ccc.ddd'");
+	U("\t\tip6addr  :=  '[aa:bb:cc::dd:ee]'");
+	U("\t\tdnsname  := 'irc.example.org'");
+	U("");
+	U("\t-v: Increase verbosity on stderr (use -vv or -vvv for more)");
+	U("\t-q: Decrease verbosity on stderr (use -qq or -qqq for less)");
+	U("\t-h: Display brief usage statement and terminate");
+	U("\t-r: Respawn on session end, rather than terminating");
+	U("");
+	U("\t-i <hostspec>: Local interface and port to bind to."
+	    "[def: "DEF_LOCAL_IF":"XSTR(DEF_LOCAL_PORT)"]");
+	U("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms."
+	    "[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
+	U("");
+	U("(C) 2014, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
+	#undef U
+	#undef STR
+	#undef XSTR
 	exit(ec);
 }
 
