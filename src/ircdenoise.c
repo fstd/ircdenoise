@@ -69,11 +69,66 @@ static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool session(void);
+static bool process_clt(void);
+static bool process_irc(void);
 static void usage(FILE *str, const char *a0, int ec);
 
 
 static bool
 session(void)
+{
+	WVX("connecting to ircd in dumb mode");
+	if (!irc_connect(g_irc)) {
+		WX("failed to connect");
+		io_fprintf(g_clt, ":de.noise ERROR :(denoise) Failed to "
+		    "connect to '%s:%" PRIu16"': %s\r\n", irc_get_host(g_irc),
+		    irc_get_port(g_irc), strerror(errno));
+		return true;
+	}
+
+	WVX("connected, entering session loop");
+
+	while (irc_online(g_irc)) {
+		bool canreadclt = false;
+		bool canreadirc = irc_can_read(g_irc);
+
+		int r;
+		if (!canreadirc) {
+			r = select2(&canreadclt, &canreadirc, g_clt,
+			    irc_sockfd(g_irc), 3000000u);
+			if (r < 0 && errno != EINTR)
+				E("select");
+		}
+
+		if (g_dumpplx) {
+			irc_dump(g_irc);
+			if (irc_tracking_enab(g_irc))
+				trk_dump(g_irc, true);
+			g_dumpplx = false;
+		}
+
+		if (canreadirc && !process_irc()) {
+			io_fprintf(g_clt, ":de.noise ERROR :(denoise) "
+			    "Connection dropped by IRCD\r\n");
+			break;
+		}
+
+		if (canreadclt && !process_clt())
+			break;
+	}
+
+	irc_reset(g_irc);
+	return true;
+}
+
+static bool
+process_clt(void)
+{
+	return true;
+}
+
+static bool
+process_irc(void)
 {
 	return true;
 }
