@@ -11,8 +11,27 @@
 
 #include <getopt.h>
 
+#define DEF_VERB 1
+
+#define W_(FNC, THR, FMT, A...) do {                                  \
+    if (g_sett.verb < THR) break; \
+    FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
+    } while (0)
+
+#define W(FMT, A...) W_(warn, 1, FMT, ##A)
+#define WV(FMT, A...) W_(warn, 2, FMT, ##A)
+
+#define WX(FMT, A...) W_(warnx, 1, FMT, ##A)
+#define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
+
+#define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
+    exit(EXIT_FAILURE);} while (0)
+
+#define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
+    exit(EXIT_FAILURE);} while (0)
 
 static struct settings_s {
+	int verb;
 } g_sett;
 
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
@@ -25,13 +44,15 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for(int ch; (ch = getopt(*argc, *argv, "h")) != -1;) {
+	for (int ch; (ch = getopt(*argc, *argv, "qvh")) != -1;) {
 		switch (ch) {
-		case 'h':
+		case 'q':
+			sett->verb--;
+		break;case 'v':
+			sett->verb++;
+		break;case 'h':
 			usage(stdout, a0, EXIT_SUCCESS);
-			break;
-		case '?':
-		default:
+		break;case '?':default:
 			usage(stderr, a0, EXIT_FAILURE);
 		}
 	}
@@ -44,6 +65,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
+	sett->verb = DEF_VERB;
 	process_args(argc, argv, sett);
 }
 
