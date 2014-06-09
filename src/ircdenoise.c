@@ -24,6 +24,9 @@
 #include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
 
+#include <libsrsbsns/io.h>
+#include <libsrsbsns/addr.h>
+
 #define DEF_CONTO_SOFT_MS 15000u
 #define DEF_CONTO_HARD_MS 120000u
 #define DEF_LOCAL_IF "0.0.0.0"
@@ -57,6 +60,7 @@ static struct settings_s {
 } g_sett;
 
 static irc g_irc;
+static int g_clt;
 static bool g_dumpplx;
 
 static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us);
@@ -64,7 +68,15 @@ static uint64_t timestamp_us(void);
 static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
+static bool session(void);
 static void usage(FILE *str, const char *a0, int ec);
+
+
+static bool
+session(void)
+{
+	return true;
+}
 
 
 
@@ -274,6 +286,27 @@ main(int argc, char **argv)
 	init(&argc, &argv, &g_sett);
 	atexit(cleanup);
 	signal(DUMPSIG, infohnd);
+
+	int lsck = addr_bind_socket_p(g_sett.localif, g_sett.localport,
+	    NULL, NULL, g_sett.conto_soft_us, g_sett.conto_hard_us);
+
+	if (lsck == -1)
+		E("failed to bind");
+	else if (listen(lsck, 16) != 0)
+		E("failed to listen");
+
+	do {
+		if ((g_clt = accept(lsck, NULL, NULL)) == -1)
+			E("failed to accept");
+
+		WVX("accepted a socket, starting session");
+
+		session();
+
+		WVX("session over");
+
+		close(g_clt);
+	} while (g_sett.respawn);
 
 	return EXIT_SUCCESS;
 }
