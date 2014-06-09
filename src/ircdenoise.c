@@ -71,6 +71,8 @@ static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool session(void);
 static bool process_clt(void);
 static bool process_irc(void);
+static bool handle_cltmsg(const char *line);
+static bool handle_ircmsg(tokarr *tok);
 static void usage(FILE *str, const char *a0, int ec);
 
 
@@ -124,12 +126,54 @@ session(void)
 static bool
 process_clt(void)
 {
-	return true;
+	char buf[4096];
+	int r = io_read_line(g_clt, buf, sizeof buf);
+	if (r <= 0) {
+		W("io_read_line");
+		return false;
+	}
+
+	char *end = buf + strlen(buf) - 1;
+	while (end >= buf && (*end == '\r' || *end == '\n'))
+		*end-- = '\0';
+
+	if (strlen(buf) == 0)
+		return true;
+
+	return handle_cltmsg(buf);
 }
 
 static bool
 process_irc(void)
 {
+	tokarr tok;
+	int r = irc_read(g_irc, &tok, 10000);
+
+	if (r == -1) {
+		WX("irc read failed");
+		return false;
+	} else if (r == 0)
+		return true;
+
+	return handle_ircmsg(&tok);
+}
+
+static bool
+handle_cltmsg(const char *line)
+{
+	WVX("CLT -> IRCD: '%s'", line);
+	irc_write(g_irc, line);
+	return true;
+}
+
+
+static bool
+handle_ircmsg(tokarr *tok)
+{
+	char line[1024];
+	ut_snrcmsg(line, sizeof line, tok, irc_colon_trail(g_irc));
+	WVX("IRCD -> CLT: '%s'", line);
+	io_fprintf(g_clt, "%s\r\n", line);
 	return true;
 }
 
