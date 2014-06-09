@@ -255,6 +255,12 @@ usage(FILE *str, const char *a0, int ec)
 	exit(ec);
 }
 
+void
+cleanup(void)
+{
+	if (g_irc)
+		irc_dispose(g_irc);
+}
 
 void
 infohnd(int s)
@@ -266,6 +272,7 @@ int
 main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
+	atexit(cleanup);
 	signal(DUMPSIG, infohnd);
 
 	return EXIT_SUCCESS;
