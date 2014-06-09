@@ -17,6 +17,8 @@
 #include <inttypes.h>
 #include <err.h>
 
+#include <libsrsirc/irc_ext.h>
+#include <libsrsirc/irc_track.h>
 #include <libsrsirc/util.h>
 
 #define DEF_CONTO_SOFT_MS 15000u
@@ -51,6 +53,7 @@ static struct settings_s {
 	uint16_t localport;
 } g_sett;
 
+static irc g_irc;
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static void usage(FILE *str, const char *a0, int ec);
@@ -113,6 +116,12 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
+	if (!(g_irc = irc_init()))
+		EX("failed to initialize irc object");
+
+	irc_set_dumb(g_irc, true);
+	irc_set_track(g_irc, true);
+
 	sett->verb = DEF_VERB;
 	sett->conto_soft_us = DEF_CONTO_SOFT_MS*1000u;
 	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
