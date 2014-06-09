@@ -14,6 +14,7 @@
 #include <errno.h>
 
 #include <getopt.h>
+#include <signal.h>
 #include <inttypes.h>
 #include <err.h>
 
@@ -54,6 +55,7 @@ static struct settings_s {
 } g_sett;
 
 static irc g_irc;
+static bool g_dumpplx;
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static void usage(FILE *str, const char *a0, int ec);
@@ -165,10 +167,17 @@ usage(FILE *str, const char *a0, int ec)
 }
 
 
+void
+infohnd(int s)
+{
+	g_dumpplx = true;
+}
+
 int
 main(int argc, char **argv)
 {
 	init(&argc, &argv, &g_sett);
+	signal(DUMPSIG, infohnd);
 
 	return EXIT_SUCCESS;
 }
