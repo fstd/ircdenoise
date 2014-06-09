@@ -64,9 +64,6 @@ static irc g_irc;
 static int g_clt;
 static bool g_dumpplx;
 
-static int select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us);
-static uint64_t timestamp_us(void);
-static void tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts);
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
 static void init(int *argc, char ***argv, struct settings_s *sett);
 static bool session(void);
@@ -97,8 +94,8 @@ session(void)
 
 		int r;
 		if (!canreadirc) {
-			r = select2(&canreadclt, &canreadirc, g_clt,
-			    irc_sockfd(g_irc), 3000000u);
+			r = io_select2r(&canreadclt, &canreadirc, g_clt,
+			    irc_sockfd(g_irc), 3000000u, false);
 			if (r < 0 && errno != EINTR)
 				E("select");
 		}
@@ -178,87 +175,6 @@ handle_ircmsg(tokarr *tok)
 	return true;
 }
 
-
-
-static uint64_t
-timestamp_us(void)
-{
-	struct timeval t;
-	uint64_t ts = 0;
-	if (gettimeofday(&t, NULL) != 0)
-		E("gettimeofday");
-	else
-		tconv(&t, &ts, true);
-
-	return ts;
-}
-
-static void
-tconv(struct timeval *tv, uint64_t *ts, bool tv_to_ts)
-{
-	if (tv_to_ts)
-		*ts = (uint64_t)tv->tv_sec * 1000000u + tv->tv_usec;
-	else {
-		tv->tv_sec = *ts / 1000000u;
-		tv->tv_usec = *ts % 1000000u;
-	}
-}
-
-static int
-select2(bool *rdbl1, bool *rdbl2, int fd1, int fd2, uint64_t to_us)
-{
-	fd_set read_set;
-	struct timeval tout;
-	int ret;
-
-	uint64_t tsend = to_us ? timestamp_us() + to_us : 0;
-	uint64_t trem = 0;
-
-	if (fd1 < 0 && fd2 < 0) {
-		W("both filedescriptors -1");
-		return -1;
-	}
-
-	int maxfd = fd1 > fd2 ? fd1 : fd2;
-
-	FD_ZERO(&read_set);
-
-	if (fd1 >= 0)
-		FD_SET(fd1, &read_set);
-	if (fd2 >= 0)
-		FD_SET(fd2, &read_set);
-
-	for (;;) {
-		if (tsend) {
-			trem = tsend - timestamp_us();
-			if (trem <= 0)
-				trem = 1;
-			tconv(&tout, &trem, false);
-		}
-		errno=0;
-		ret = select(maxfd + 1, &read_set, NULL, NULL,
-		    tsend ? &tout : NULL);
-
-		if (ret == -1) {
-			if (errno != EINTR)
-				W("select failed");
-			return -1;
-		}
-
-		break;
-	}
-
-	if (rdbl1) *rdbl1 = false;
-	if (rdbl2) *rdbl2 = false;
-	if (ret > 0) {
-		if (fd1 >= 0 && FD_ISSET(fd1, &read_set))
-			if (rdbl1) *rdbl1 = true;
-		if (fd2 >= 0 && FD_ISSET(fd2, &read_set))
-			if (rdbl2) *rdbl2 = true;
-	}
-
-	return ret;
-}
 
 
 
