@@ -309,11 +309,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 			usage(stderr, a0, EXIT_FAILURE);
 		}
 	}
-
 	*argc -= optind;
 	*argv += optind;
 }
-
 
 static void
 init(int *argc, char ***argv, struct settings_s *sett)
