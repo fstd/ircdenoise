@@ -8,8 +8,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <getopt.h>
+#include <err.h>
 
 #define DEF_VERB 1
 
