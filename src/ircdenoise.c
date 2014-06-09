@@ -8,11 +8,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
 #include <errno.h>
 
 #include <getopt.h>
+#include <inttypes.h>
 #include <err.h>
 
+#include <libsrsirc/util.h>
+
+#define DEF_CONTO_SOFT_MS 15000u
+#define DEF_CONTO_HARD_MS 120000u
+#define DEF_LOCAL_IF "0.0.0.0"
+#define DEF_LOCAL_PORT 6776
 #define DEF_VERB 1
 
 #define W_(FNC, THR, FMT, A...) do {                                  \
@@ -33,7 +43,12 @@
     exit(EXIT_FAILURE);} while (0)
 
 static struct settings_s {
+	uint64_t conto_soft_us;
+	uint64_t conto_hard_us;
+	bool respawn;
 	int verb;
+	char localif[256];
+	uint16_t localport;
 } g_sett;
 
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
@@ -46,9 +61,40 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = getopt(*argc, *argv, "qvh")) != -1;) {
+	for (int ch; (ch = getopt(*argc, *argv, "i:T:rqvh")) != -1;) {
 		switch (ch) {
-		case 'q':
+		      case 'i':
+			ut_parse_hostspec(sett->localif, sizeof sett->localif,
+				&sett->localport, NULL, optarg);
+			WVX("will bind to '%s:%"PRIu16"'",
+			    sett->localif, sett->localport);
+		break;case 'T':
+			{
+			char *arg = strdup(optarg);
+			if (!arg)
+				E("strdup failed");
+
+			char *ptr = strchr(arg, ':');
+			if (!ptr)
+				sett->conto_hard_us =
+				    (uint64_t)strtoull(arg, NULL, 10) * 1000u;
+			else {
+				*ptr = '\0';
+				sett->conto_hard_us =
+				    (uint64_t)strtoull(arg, NULL, 10) * 1000u;
+				sett->conto_soft_us =
+				    (uint64_t)strtoull(ptr+1, NULL, 10) * 1000u;
+			}
+
+			WVX("set connect timeout to %"PRIu64"ms (soft), "
+			    "%"PRIu64"ms (hard)", sett->conto_soft_us / 1000u,
+			    sett->conto_hard_us / 1000u);
+
+			free(arg);
+			}
+		break;case 'r':
+			sett->respawn = true;
+		break;case 'q':
 			sett->verb--;
 		break;case 'v':
 			sett->verb++;
@@ -68,6 +114,12 @@ static void
 init(int *argc, char ***argv, struct settings_s *sett)
 {
 	sett->verb = DEF_VERB;
+	sett->conto_soft_us = DEF_CONTO_SOFT_MS*1000u;
+	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
+	strncpy(sett->localif, DEF_LOCAL_IF, sizeof sett->localif);
+		sett->localif[sizeof sett->localif - 1] = '\0';
+	sett->localport = DEF_LOCAL_PORT;
+
 	process_args(argc, argv, sett);
 }
 
