@@ -15,10 +15,21 @@ AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-AC_CHECK_HEADERS([stdlib.h])
 
 AC_CHECK_LIB([srsbsns], [ringbuf_init], [], [AC_MSG_ERROR([libsrsbsns not installed?])])
 AC_CHECK_LIB([srsirc], [irc_init], [], [AC_MSG_ERROR([libsrsirc not installed?])])
+
+
+AC_CHECK_HEADERS([stdlib.h limits.h sys/time.h])
+AC_CHECK_HEADER_STDBOOL
+
+
+AC_TYPE_UINT16_T
+AC_TYPE_UINT64_T
+
+
+AC_CHECK_FUNCS([atexit gettimeofday select strchr strdup strerror strtoull])
+
 
 if test "$(uname)" = "Linux"; then
 AC_DEFINE([DUMPSIG], [SIGUSR1], [SIGUSR1 on Linux, SIGINFO on the BSDs])
@@ -27,6 +38,7 @@ else
 AC_DEFINE([DUMPSIG], [SIGINFO], [SIGUSR1 on Linux, SIGINFO on the BSDs])
 :
 fi
+
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
