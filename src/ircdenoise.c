@@ -11,13 +11,17 @@
 
 #include <getopt.h>
 
-static void process_args(int *argc, char ***argv);
-static void init(int *argc, char ***argv);
+
+static struct settings_s {
+} g_sett;
+
+static void process_args(int *argc, char ***argv, struct settings_s *sett);
+static void init(int *argc, char ***argv, struct settings_s *sett);
 static void usage(FILE *str, const char *a0, int ec);
 
 
 static void
-process_args(int *argc, char ***argv)
+process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
@@ -38,9 +42,9 @@ process_args(int *argc, char ***argv)
 
 
 static void
-init(int *argc, char ***argv)
+init(int *argc, char ***argv, struct settings_s *sett)
 {
-	process_args(argc, argv);
+	process_args(argc, argv, sett);
 }
 
 
@@ -64,7 +68,7 @@ usage(FILE *str, const char *a0, int ec)
 int
 main(int argc, char **argv)
 {
-	init(&argc, &argv);
+	init(&argc, &argv, &g_sett);
 
 	return EXIT_SUCCESS;
 }
