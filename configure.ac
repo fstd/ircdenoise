@@ -17,6 +17,7 @@ AC_PROG_MAKE_SET
 
 AC_CHECK_HEADERS([stdlib.h])
 
+AC_CHECK_LIB([srsbsns], [ringbuf_init], [], [AC_MSG_ERROR([libsrsbsns not installed?])])
 AC_CHECK_LIB([srsirc], [irc_init], [], [AC_MSG_ERROR([libsrsirc not installed?])])
 
 AC_CONFIG_FILES([Makefile
