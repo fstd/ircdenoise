@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <err.h>
 #include <sys/select.h>
+#include <unistd.h>
 
 #include <libsrsirc/irc_ext.h>
 #include <libsrsirc/irc_track.h>
