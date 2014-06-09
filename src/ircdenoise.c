@@ -130,8 +130,23 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	sett->localport = DEF_LOCAL_PORT;
 
 	process_args(argc, argv, sett);
-}
 
+	if (*argc != 1)
+		EX("no or too many servers given");
+
+	char host[256];
+	uint16_t port;
+	ut_parse_hostspec(host, sizeof host, &port, NULL, (*argv)[0]);
+
+	irc_set_server(g_irc, host, port);
+	WVX("set server to '%s:%"PRIu16"'",
+	    irc_get_host(g_irc), irc_get_port(g_irc));
+
+	irc_set_connect_timeout(g_irc,
+	    g_sett.conto_soft_us, g_sett.conto_hard_us);
+
+	WVX("initialized");
+}
 
 static void
 usage(FILE *str, const char *a0, int ec)
