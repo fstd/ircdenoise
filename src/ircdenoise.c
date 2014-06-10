@@ -30,6 +30,8 @@
 
 #include "dbg.h"
 
+#include "msghandle.h"
+
 #define DEF_CONTO_SOFT_MS 15000u
 #define DEF_CONTO_HARD_MS 120000u
 #define DEF_LOCAL_IF "0.0.0.0"
@@ -248,6 +250,8 @@ init(int *argc, char ***argv, struct settings_s *sett)
 
 	irc_set_connect_timeout(g_irc,
 	    g_sett.conto_soft_us, g_sett.conto_hard_us);
+
+	msghandle_init(g_irc);
 
 	WVX("initialized");
 }
