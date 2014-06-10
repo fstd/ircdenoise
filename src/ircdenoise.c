@@ -172,6 +172,11 @@ handle_ircmsg(tokarr *tok)
 			WX("no colon in privmsg, mh");
 			return true;
 		}
+
+		if (ptr[1] == 1) {
+			if (!(ptr = strchr(ptr, ' ')))
+				return true;
+		}
 		strNcpy(mang, line, (ptr - line) + 2);
 		strNcat(mang, "[joined] ", sizeof mang);
 		strNcat(mang, ptr+1, sizeof mang);
