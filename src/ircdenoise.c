@@ -46,8 +46,9 @@ static struct settings_s {
 	uint16_t localport;
 } g_sett;
 
-static irc g_irc;
-static int g_clt;
+irc g_irc;
+int g_clt;
+
 static bool g_dumpplx;
 
 static void process_args(int *argc, char ***argv, struct settings_s *sett);
