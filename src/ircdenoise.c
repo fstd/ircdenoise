@@ -296,20 +296,20 @@ usage(FILE *str, const char *a0, int ec)
 	U("\t\tsrvaddr  := ip4addr|ip6addr|dnsname");
 	U("\t\tport     := int(0..65535)");
 	U("\t\tip4addr  := 'aaa.bbb.ccc.ddd'");
-	U("\t\tip6addr  :=  '[aa:bb:cc::dd:ee]'");
+	U("\t\tip6addr  := '[aaaa:bbbb::eeee:ffff]'");
 	U("\t\tdnsname  := 'irc.example.org'");
 	U("");
+	U("\t-r: Respawn on session end, rather than terminating");
 	U("\t-v: Increase verbosity on stderr (use -vv or -vvv for more)");
 	U("\t-q: Decrease verbosity on stderr (use -qq or -qqq for less)");
 	U("\t-h: Display brief usage statement and terminate");
-	U("\t-r: Respawn on session end, rather than terminating");
 	U("");
-	U("\t-i <hostspec>: Local interface and port to bind to."
-	    "[def: "DEF_LOCAL_IF":"XSTR(DEF_LOCAL_PORT)"]");
-	U("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms."
-	    "[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
 	U("\t-a <int>: Time (ms) to stay `armed' after seeing a user talk\n"
 	    "\t\t[def: "XSTR(DEF_ARM_TIME)"]");
+	U("\t-i <hostspec>: Local interface and port to bind to.\n"
+	    "\t\t[def: "DEF_LOCAL_IF":"XSTR(DEF_LOCAL_PORT)"]");
+	U("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms.\n"
+	    "\t\t[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
 	U("");
 	U("(C) 2014, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
 	#undef U
