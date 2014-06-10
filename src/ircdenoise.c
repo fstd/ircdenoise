@@ -37,12 +37,14 @@
 #define DEF_LOCAL_IF "0.0.0.0"
 #define DEF_LOCAL_PORT 6776
 #define DEF_VERB 1
+#define DEF_ARM_TIME 10000000u
 
 int g_verb;
 
 static struct settings_s {
 	uint64_t conto_soft_us;
 	uint64_t conto_hard_us;
+	uint64_t arm_time;
 	bool respawn;
 	char localif[256];
 	uint16_t localport;
@@ -172,7 +174,7 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 {
 	char *a0 = (*argv)[0];
 
-	for (int ch; (ch = getopt(*argc, *argv, "i:T:rqvh")) != -1;) {
+	for (int ch; (ch = getopt(*argc, *argv, "i:T:a:rqvh")) != -1;) {
 		switch (ch) {
 		      case 'i':
 			ut_parse_hostspec(sett->localif, sizeof sett->localif,
@@ -203,6 +205,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 			free(arg);
 			}
+		break;case 'a':
+			sett->arm_time =
+			    (uint64_t)strtoull(optarg, NULL, 10) * 1000u;
 		break;case 'r':
 			sett->respawn = true;
 		break;case 'q':
@@ -234,6 +239,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	strncpy(sett->localif, DEF_LOCAL_IF, sizeof sett->localif);
 		sett->localif[sizeof sett->localif - 1] = '\0';
 	sett->localport = DEF_LOCAL_PORT;
+	sett->arm_time = DEF_ARM_TIME;
 
 	process_args(argc, argv, sett);
 
@@ -252,6 +258,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	    g_sett.conto_soft_us, g_sett.conto_hard_us);
 
 	msghandle_init(g_irc);
+	msghandle_set_arm_time(sett->arm_time);
 
 	WVX("initialized");
 }
@@ -284,6 +291,8 @@ usage(FILE *str, const char *a0, int ec)
 	    "[def: "DEF_LOCAL_IF":"XSTR(DEF_LOCAL_PORT)"]");
 	U("\t-T <int>[:<int>]: Connect/Logon hard[:soft]-timeout in ms."
 	    "[def: "XSTR(DEF_CONTO_HARD_MS)":"XSTR(DEF_CONTO_SOFT_MS)"]");
+	U("\t-a <int>: Time (ms) to stay `armed' after seeing a user talk\n"
+	    "\t\t[def: "XSTR(DEF_ARM_TIME)"]");
 	U("");
 	U("(C) 2014, Timo Buhrmester (contact: #fstd @ irc.freenode.org)");
 	#undef U
