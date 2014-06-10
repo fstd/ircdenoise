@@ -27,6 +27,7 @@
 
 #include <libsrsbsns/io.h>
 #include <libsrsbsns/addr.h>
+#include <libsrsbsns/misc.h>
 
 #include "dbg.h"
 
@@ -136,6 +137,7 @@ static bool
 process_irc(void)
 {
 	tokarr tok;
+	msghandle_interdast(false);
 	int r = irc_read(g_irc, &tok, 10000);
 
 	if (r == -1) {
@@ -160,9 +162,24 @@ static bool
 handle_ircmsg(tokarr *tok)
 {
 	char line[1024];
+	char *out = line;
 	ut_snrcmsg(line, sizeof line, tok, irc_colon_trail(g_irc));
-	WVX("IRCD -> CLT: '%s'", line);
-	io_fprintf(g_clt, "%s\r\n", line);
+	if (strcmp((*tok)[1], "PRIVMSG") == 0 && msghandle_interdast(false)) {
+		char mang[1024];
+		char *ptr = strstr(line, " PRIVMSG ");
+		ptr = strchr(ptr, ':');
+		if (!ptr) {
+			WX("no colon in privmsg, mh");
+			return true;
+		}
+		strNcpy(mang, line, (ptr - line) + 2);
+		strNcat(mang, "[joined] ", sizeof mang);
+		strNcat(mang, ptr+1, sizeof mang);
+		WVX("mang: '%s'", mang);
+		out = mang;
+	}
+	WVX("IRCD -> CLT: '%s'", out);
+	io_fprintf(g_clt, "%s\r\n", out);
 	return true;
 }
 
