@@ -28,34 +28,20 @@
 #include <libsrsbsns/io.h>
 #include <libsrsbsns/addr.h>
 
+#include "dbg.h"
+
 #define DEF_CONTO_SOFT_MS 15000u
 #define DEF_CONTO_HARD_MS 120000u
 #define DEF_LOCAL_IF "0.0.0.0"
 #define DEF_LOCAL_PORT 6776
 #define DEF_VERB 1
 
-#define W_(FNC, THR, FMT, A...) do {                                  \
-    if (g_sett.verb < THR) break; \
-    FNC("%s:%d:%s() - " FMT, __FILE__, __LINE__, __func__, ##A);  \
-    } while (0)
-
-#define W(FMT, A...) W_(warn, 1, FMT, ##A)
-#define WV(FMT, A...) W_(warn, 2, FMT, ##A)
-
-#define WX(FMT, A...) W_(warnx, 1, FMT, ##A)
-#define WVX(FMT, A...) W_(warnx, 2, FMT, ##A)
-
-#define E(FMT, A...) do { W_(warn, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while (0)
-
-#define EX(FMT, A...) do { W_(warnx, 0, FMT, ##A); \
-    exit(EXIT_FAILURE);} while (0)
+int g_verb;
 
 static struct settings_s {
 	uint64_t conto_soft_us;
 	uint64_t conto_hard_us;
 	bool respawn;
-	int verb;
 	char localif[256];
 	uint16_t localport;
 } g_sett;
@@ -217,9 +203,9 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 		break;case 'r':
 			sett->respawn = true;
 		break;case 'q':
-			sett->verb--;
+			g_verb--;
 		break;case 'v':
-			sett->verb++;
+			g_verb++;
 		break;case 'h':
 			usage(stdout, a0, EXIT_SUCCESS);
 		break;case '?':default:
@@ -239,7 +225,7 @@ init(int *argc, char ***argv, struct settings_s *sett)
 	irc_set_dumb(g_irc, true);
 	irc_set_track(g_irc, true);
 
-	sett->verb = DEF_VERB;
+	g_verb = DEF_VERB;
 	sett->conto_soft_us = DEF_CONTO_SOFT_MS*1000u;
 	sett->conto_hard_us = DEF_CONTO_HARD_MS*1000u;
 	strncpy(sett->localif, DEF_LOCAL_IF, sizeof sett->localif);
