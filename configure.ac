@@ -20,15 +20,18 @@ AC_CHECK_LIB([srsbsns], [ringbuf_init], [], [AC_MSG_ERROR([libsrsbsns not instal
 AC_CHECK_LIB([srsirc], [irc_init], [], [AC_MSG_ERROR([libsrsirc not installed?])])
 
 
-AC_CHECK_HEADERS([stdlib.h limits.h sys/time.h])
+AC_CHECK_HEADERS([stdlib.h limits.h stddef.h sys/time.h])
 AC_CHECK_HEADER_STDBOOL
 
 
+AC_TYPE_SIZE_T
 AC_TYPE_UINT16_T
 AC_TYPE_UINT64_T
 
 
-AC_CHECK_FUNCS([atexit gettimeofday select strchr strdup strerror strtoull])
+AC_CHECK_FUNCS([atexit gettimeofday select strchr strdup strerror strstr strtoull])
+AC_FUNC_MALLOC
+
 
 
 if test "$(uname)" = "Linux"; then
