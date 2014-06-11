@@ -181,7 +181,12 @@ handle_PART(irc h, tokarr *msg, size_t ac, bool pre)
 	
 	if (ut_istrcmp(nick, irc_mynick(h), irc_casemap(h)) == 0) {
 		struct chantag *tag = c.tag;
-		//XXX free elements in map
+		void *e;
+		if (smap_first(tag->membmap, NULL, &e))
+			do {
+				free(e);
+			} while (smap_next(tag->membmap, NULL, &e));
+
 		smap_dispose(tag->membmap);
 		free(tag);
 		return true;
