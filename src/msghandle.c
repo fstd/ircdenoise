@@ -21,8 +21,6 @@
 
 #include "msghandle.h"
 
-#define OURPFX ":-DENOISE!denoise@de.noise"
-
 extern irc g_irc;
 extern int g_clt;
 
@@ -142,14 +140,20 @@ handle_JOIN(irc h, tokarr *msg, size_t ac, bool pre)
 		return true;
 	}
 
+	userrep ur;
+	if (!irc_user(h, &ur, lnick)) {
+		WX("user '%s' not found", lnick);
+		return true;
+	}
+
 	struct chantag *tag = c.tag;
 
 	uent *u = smap_get(tag->membmap, lnick);
 	if (!u) smap_put(tag->membmap, lnick, (u = mkuent()));
 
 	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-		io_fprintf(g_clt, OURPFX" PRIVMSG %s :%s "
-		    "JOIN %s\r\n", (*msg)[2], nick, (*msg)[2]);
+		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise JOIN]\r\n",
+		    ur.nick, ur.uname, ur.host, (*msg)[2]);
 	}
 	u->joinat = (uint64_t)tstamp_us();
 	WVX("updated joinat for '%s' in '%s'", lnick, chname);
@@ -182,6 +186,12 @@ handle_PART(irc h, tokarr *msg, size_t ac, bool pre)
 		return true;
 	}
 
+	userrep ur;
+	if (!irc_user(h, &ur, lnick)) {
+		WX("user '%s' not found", lnick);
+		return true;
+	}
+
 	struct chantag *tag = c.tag;
 
 	uent *u = smap_get(tag->membmap, lnick);
@@ -189,9 +199,8 @@ handle_PART(irc h, tokarr *msg, size_t ac, bool pre)
 		return true;
 
 	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-		io_fprintf(g_clt, OURPFX" PRIVMSG %s :%s PART %s"
-		    " (%s)\r\n", (*msg)[2], nick, (*msg)[2],
-		    (*msg)[3] ? (*msg)[3] : "");
+		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise PART (%s)]\r\n",
+		    ur.nick, ur.uname, ur.host, (*msg)[2], (*msg)[3] ? (*msg)[3] : "");
 	}
 	u->joinat = 0;
 	WVX("reset joinat for '%s' in '%s'", lnick, chname);
@@ -213,6 +222,12 @@ handle_QUIT(irc h, tokarr *msg, size_t ac, bool pre)
 
 	irc_all_chans(h, chans, nchans);
 
+	userrep ur;
+	if (!irc_user(h, &ur, lnick)) {
+		WX("user '%s' not found", lnick);
+		return true;
+	}
+
 	for (size_t i = 0; i < nchans; i++) {
 		struct chantag *tag = chans[i].tag;
 
@@ -221,8 +236,8 @@ handle_QUIT(irc h, tokarr *msg, size_t ac, bool pre)
 			continue;
 
 		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-			io_fprintf(g_clt, OURPFX" PRIVMSG %s :(denoise) %s "
-			    "has QUIT (%s)\r\n", chans[i].name, nick,
+			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise QUIT (%s)]\r\n",
+			    ur.nick, ur.uname, ur.host, chans[i].name,
 			    (*msg)[2] ? (*msg)[2] : "");
 		}
 		u->joinat = 0;
@@ -245,6 +260,12 @@ handle_NICK(irc h, tokarr *msg, size_t ac, bool pre)
 	ut_strtolower(lnnick, sizeof lnnick, (*msg)[2], irc_casemap(h));
 	WVX("handling a NICK of '%s' (to '%s')", lnick, lnnick);
 
+	userrep ur;
+	if (!irc_user(h, &ur, lnick)) {
+		WX("user '%s' not found", lnick);
+		return true;
+	}
+
 	size_t nchans = irc_num_chans(h);
 	chanrep *chans = malloc(nchans * sizeof *chans);
 
@@ -261,8 +282,8 @@ handle_NICK(irc h, tokarr *msg, size_t ac, bool pre)
 		smap_put(tag->membmap, lnnick, u);
 
 		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-			io_fprintf(g_clt, OURPFX" PRIVMSG %s :(denoise) %s "
-			    "NICK %s\r\n", chans[i].name, nick, (*msg)[2]);
+			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise NICK (%s)]\r\n",
+			    ur.nick, ur.uname, ur.host, chans[i].name, (*msg)[2]);
 		}
 	}
 
