@@ -38,7 +38,7 @@
 #define DEF_LOCAL_IF "0.0.0.0"
 #define DEF_LOCAL_PORT 6776
 #define DEF_VERB 1
-#define DEF_ARM_TIME 10000000u
+#define DEF_ARM_TIME 300000u
 
 int g_verb;
 
