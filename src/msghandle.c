@@ -25,11 +25,11 @@ extern irc g_irc;
 extern int g_clt;
 
 
-static bool s_interdast;
+static int s_interdast;
 static uint64_t s_arm_time = 10000000u;
 
 struct uent {
-	uint64_t joinat;
+	uint64_t quietsincejoin;
 	uint64_t lastmsg;
 };
 
@@ -55,10 +55,10 @@ msghandle_init(irc h)
 	irc_reg_msghnd(h, "NICK", handle_NICK, true);
 }
 
-bool
-msghandle_interdast(bool i)
+int
+msghandle_interdast(int i)
 {
-	bool old = s_interdast;
+	int old = s_interdast;
 	s_interdast = i;
 	return old;
 }
@@ -73,7 +73,7 @@ static uent*
 mkuent(void)
 {
 	uent *u = malloc(sizeof *u);
-	u->joinat = 0;
+	u->quietsincejoin = false;
 	u->lastmsg = 0;
 	return u;
 
@@ -107,8 +107,10 @@ handle_PRIVMSG(irc h, tokarr *msg, size_t ac, bool pre)
 	uent *u = smap_get(tag->membmap, lnick);
 	if (!u) smap_put(tag->membmap, lnick, (u = mkuent()));
 
-	if (!u->lastmsg)
-		s_interdast = true;
+	if (u->quietsincejoin)
+		s_interdast = 2;
+	else if (!u->lastmsg)
+		s_interdast = 1;
 
 	u->lastmsg = (uint64_t)tstamp_us();
 	WVX("updated lastmsg for '%s' in '%s'", lnick, chname);
@@ -155,8 +157,7 @@ handle_JOIN(irc h, tokarr *msg, size_t ac, bool pre)
 		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise JOIN]\r\n",
 		    ur.nick, ur.uname, ur.host, (*msg)[2]);
 	}
-	u->joinat = (uint64_t)tstamp_us();
-	WVX("updated joinat for '%s' in '%s'", lnick, chname);
+	u->quietsincejoin = true;
 
 	return true;
 }
@@ -202,8 +203,6 @@ handle_PART(irc h, tokarr *msg, size_t ac, bool pre)
 		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise PART (%s)]\r\n",
 		    ur.nick, ur.uname, ur.host, (*msg)[2], (*msg)[3] ? (*msg)[3] : "");
 	}
-	u->joinat = 0;
-	WVX("reset joinat for '%s' in '%s'", lnick, chname);
 
 	return true;
 }
@@ -240,8 +239,6 @@ handle_QUIT(irc h, tokarr *msg, size_t ac, bool pre)
 			    ur.nick, ur.uname, ur.host, chans[i].name,
 			    (*msg)[2] ? (*msg)[2] : "");
 		}
-		u->joinat = 0;
-		WVX("reset joinat for '%s' in '%s'", lnick, chans[i].name);
 	}
 
 	free(chans);

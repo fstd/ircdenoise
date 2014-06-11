@@ -137,7 +137,7 @@ static bool
 process_irc(void)
 {
 	tokarr tok;
-	msghandle_interdast(false);
+	msghandle_interdast(0);
 	int r = irc_read(g_irc, &tok, 10000);
 
 	if (r == -1) {
@@ -164,7 +164,8 @@ handle_ircmsg(tokarr *tok)
 	char line[1024];
 	char *out = line;
 	ut_snrcmsg(line, sizeof line, tok, irc_colon_trail(g_irc));
-	if (strcmp((*tok)[1], "PRIVMSG") == 0 && msghandle_interdast(false)) {
+	int id = msghandle_interdast(0);
+	if (strcmp((*tok)[1], "PRIVMSG") == 0 && id) {
 		char mang[1024];
 		char *ptr = strstr(line, " PRIVMSG ");
 		ptr = strchr(ptr, ':');
@@ -178,7 +179,7 @@ handle_ircmsg(tokarr *tok)
 				return true;
 		}
 		strNcpy(mang, line, (ptr - line) + 2);
-		strNcat(mang, "[joined] ", sizeof mang);
+		strNcat(mang, id == 2 ? "[joined] " : "[never seen]", sizeof mang);
 		strNcat(mang, ptr+1, sizeof mang);
 		WVX("mang: '%s'", mang);
 		out = mang;
