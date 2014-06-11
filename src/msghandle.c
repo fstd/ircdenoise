@@ -260,6 +260,9 @@ handle_NICK(irc h, tokarr *msg, size_t ac, bool pre)
 	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
 	ut_strtolower(lnick, sizeof lnick, nick, irc_casemap(h));
 	ut_strtolower(lnnick, sizeof lnnick, (*msg)[2], irc_casemap(h));
+	if (ut_istrcmp(nick, irc_mynick(h), irc_casemap(h)) == 0)
+		return true;
+
 	WVX("handling a NICK of '%s' (to '%s')", lnick, lnnick);
 
 	userrep ur;
