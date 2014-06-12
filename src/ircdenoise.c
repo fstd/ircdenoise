@@ -179,7 +179,7 @@ handle_ircmsg(tokarr *tok)
 				return true;
 		}
 		strNcpy(nl, line, (ptr - line) + 2);
-		strNcat(nl, id == 2 ? "[joined] " : "[never seen]", sizeof nl);
+		strNcat(nl, id == 2 ? "[joined] " : "[never seen] ", sizeof nl);
 		strNcat(nl, ptr+1, sizeof nl);
 		WVX("nl: '%s'", nl);
 		out = nl;

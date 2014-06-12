@@ -107,12 +107,13 @@ handle_PRIVMSG(irc h, tokarr *msg, size_t ac, bool pre)
 	uent *u = smap_get(tag->membmap, lnick);
 	if (!u) smap_put(tag->membmap, lnick, (u = mkuent()));
 
-	if (u->quietsincejoin)
-		s_interdast = 2;
-	else if (!u->lastmsg)
+	if (!u->lastmsg)
 		s_interdast = 1;
+	else if (u->quietsincejoin)
+		s_interdast = 2;
 
 	u->lastmsg = (uint64_t)tstamp_us();
+	u->quietsincejoin = false;
 	WVX("updated lastmsg for '%s' in '%s'", lnick, chname);
 
 	return true;
