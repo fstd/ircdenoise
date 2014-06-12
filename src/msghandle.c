@@ -90,7 +90,7 @@ handle_PRIVMSG(irc h, tokarr *msg, size_t ac, bool pre)
 
 	if (chname[0] != '#') //XXX better ask libsrsirc
 		return true;
-		
+
 	char nick[64];
 	char lnick[64];
 	ut_pfx2nick(nick, sizeof nick, (*msg)[0]);
@@ -134,7 +134,7 @@ handle_JOIN(irc h, tokarr *msg, size_t ac, bool pre)
 		WX("chan '%s' now known?!", chname);
 		return true;
 	}
-	
+
 	if (ut_istrcmp(nick, irc_mynick(h), irc_casemap(h)) == 0) {
 		struct chantag *tag = malloc(sizeof *tag);
 		tag->membmap = smap_init(256);
@@ -153,10 +153,10 @@ handle_JOIN(irc h, tokarr *msg, size_t ac, bool pre)
 	uent *u = smap_get(tag->membmap, lnick);
 	if (!u) smap_put(tag->membmap, lnick, (u = mkuent()));
 
-	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
+	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us())
 		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise JOIN]\r\n",
 		    ur.nick, ur.uname, ur.host, (*msg)[2]);
-	}
+
 	u->quietsincejoin = true;
 
 	return true;
@@ -204,10 +204,10 @@ handle_PART(irc h, tokarr *msg, size_t ac, bool pre)
 	if (!u)
 		return true;
 
-	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise PART (%s)]\r\n",
-		    ur.nick, ur.uname, ur.host, (*msg)[2], (*msg)[3] ? (*msg)[3] : "");
-	}
+	if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us())
+		io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise PART (%s)]"
+		    "\r\n", ur.nick, ur.uname, ur.host, (*msg)[2],
+		    (*msg)[3] ? (*msg)[3] : "");
 
 	return true;
 }
@@ -239,11 +239,10 @@ handle_QUIT(irc h, tokarr *msg, size_t ac, bool pre)
 		if (!u)
 			continue;
 
-		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise QUIT (%s)]\r\n",
-			    ur.nick, ur.uname, ur.host, chans[i].name,
-			    (*msg)[2] ? (*msg)[2] : "");
-		}
+		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us())
+			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise QUIT"
+			    " (%s)]\r\n", ur.nick, ur.uname, ur.host,
+			    chans[i].name, (*msg)[2] ? (*msg)[2] : "");
 	}
 
 	free(chans);
@@ -286,10 +285,10 @@ handle_NICK(irc h, tokarr *msg, size_t ac, bool pre)
 		smap_del(tag->membmap, lnick);
 		smap_put(tag->membmap, lnnick, u);
 
-		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us()) {
-			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise NICK (%s)]\r\n",
-			    ur.nick, ur.uname, ur.host, chans[i].name, (*msg)[2]);
-		}
+		if (u->lastmsg + s_arm_time > (uint64_t)tstamp_us())
+			io_fprintf(g_clt, ":%s!%s@%s PRIVMSG %s :[denoise NICK"
+			    " (%s)]\r\n", ur.nick, ur.uname, ur.host,
+			    chans[i].name, (*msg)[2]);
 	}
 
 	free(chans);

@@ -166,7 +166,7 @@ handle_ircmsg(tokarr *tok)
 	ut_snrcmsg(line, sizeof line, tok, irc_colon_trail(g_irc));
 	int id = msghandle_interdast(0);
 	if (strcmp((*tok)[1], "PRIVMSG") == 0 && id) {
-		char mang[1024];
+		char nl[1024];
 		char *ptr = strstr(line, " PRIVMSG ");
 		ptr = strchr(ptr, ':');
 		if (!ptr) {
@@ -178,11 +178,11 @@ handle_ircmsg(tokarr *tok)
 			if (!(ptr = strchr(ptr, ' ')))
 				return true;
 		}
-		strNcpy(mang, line, (ptr - line) + 2);
-		strNcat(mang, id == 2 ? "[joined] " : "[never seen]", sizeof mang);
-		strNcat(mang, ptr+1, sizeof mang);
-		WVX("mang: '%s'", mang);
-		out = mang;
+		strNcpy(nl, line, (ptr - line) + 2);
+		strNcat(nl, id == 2 ? "[joined] " : "[never seen]", sizeof nl);
+		strNcat(nl, ptr+1, sizeof nl);
+		WVX("nl: '%s'", nl);
+		out = nl;
 	}
 	WVX("IRCD -> CLT: '%s'", out);
 	io_fprintf(g_clt, "%s\r\n", out);
@@ -199,12 +199,13 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 	for (int ch; (ch = getopt(*argc, *argv, "i:T:a:rqvh")) != -1;) {
 		switch (ch) {
-		      case 'i':
+		case 'i':
 			ut_parse_hostspec(sett->localif, sizeof sett->localif,
 				&sett->localport, NULL, optarg);
 			WVX("will bind to '%s:%"PRIu16"'",
 			    sett->localif, sett->localport);
-		break;case 'T':
+			break;
+		case 'T':
 			{
 			char *arg = strdup(optarg);
 			if (!arg)
@@ -228,18 +229,24 @@ process_args(int *argc, char ***argv, struct settings_s *sett)
 
 			free(arg);
 			}
-		break;case 'a':
+			break;
+		case 'a':
 			sett->arm_time =
 			    (uint64_t)strtoull(optarg, NULL, 10) * 1000u;
-		break;case 'r':
+			break;
+		case 'r':
 			sett->respawn = true;
-		break;case 'q':
+			break;
+		case 'q':
 			g_verb--;
-		break;case 'v':
+			break;
+		case 'v':
 			g_verb++;
-		break;case 'h':
+			break;
+		case 'h':
 			usage(stdout, a0, EXIT_SUCCESS);
-		break;case '?':default:
+			break;
+		case '?':default:
 			usage(stderr, a0, EXIT_FAILURE);
 		}
 	}
