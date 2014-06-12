@@ -137,7 +137,6 @@ static bool
 process_irc(void)
 {
 	tokarr tok;
-	msghandle_interdast(0);
 	int r = irc_read(g_irc, &tok, 10000);
 
 	if (r == -1) {
@@ -162,30 +161,9 @@ static bool
 handle_ircmsg(tokarr *tok)
 {
 	char line[1024];
-	char *out = line;
 	ut_snrcmsg(line, sizeof line, tok, irc_colon_trail(g_irc));
-	int id = msghandle_interdast(0);
-	if (strcmp((*tok)[1], "PRIVMSG") == 0 && id) {
-		char nl[1024];
-		char *ptr = strstr(line, " PRIVMSG ");
-		ptr = strchr(ptr, ':');
-		if (!ptr) {
-			WX("no colon in privmsg, mh");
-			return true;
-		}
-
-		if (ptr[1] == 1) {
-			if (!(ptr = strchr(ptr, ' ')))
-				return true;
-		}
-		strNcpy(nl, line, (ptr - line) + 2);
-		strNcat(nl, id == 2 ? "[joined] " : "[never seen] ", sizeof nl);
-		strNcat(nl, ptr+1, sizeof nl);
-		WVX("nl: '%s'", nl);
-		out = nl;
-	}
-	WVX("IRCD -> CLT: '%s'", out);
-	io_fprintf(g_clt, "%s\r\n", out);
+	WVX("IRCD -> CLT: '%s'", line);
+	io_fprintf(g_clt, "%s\r\n", line);
 	return true;
 }
 

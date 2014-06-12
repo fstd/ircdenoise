@@ -25,7 +25,6 @@ extern irc g_irc;
 extern int g_clt;
 
 
-static int s_interdast;
 static uint64_t s_arm_time = 10000000u;
 
 struct uent {
@@ -53,14 +52,6 @@ msghandle_init(irc h)
 	irc_reg_msghnd(h, "PART", handle_PART, true);
 	irc_reg_msghnd(h, "QUIT", handle_QUIT, true);
 	irc_reg_msghnd(h, "NICK", handle_NICK, true);
-}
-
-int
-msghandle_interdast(int i)
-{
-	int old = s_interdast;
-	s_interdast = i;
-	return old;
 }
 
 void
@@ -106,11 +97,6 @@ handle_PRIVMSG(irc h, tokarr *msg, size_t ac, bool pre)
 
 	uent *u = smap_get(tag->membmap, lnick);
 	if (!u) smap_put(tag->membmap, lnick, (u = mkuent()));
-
-	if (!u->lastmsg)
-		s_interdast = 1;
-	else if (u->quietsincejoin)
-		s_interdast = 2;
 
 	u->lastmsg = (uint64_t)tstamp_us();
 	u->quietsincejoin = false;
